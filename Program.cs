@@ -62,19 +62,19 @@ namespace ConsoleApplication1
             {
                 arr[i] = results[i].ToCharArray();
             }
-            
+
             for (int i = 0; i < max + 1; i++)
             {
                 //遍历第i列
                 bool same = true;
                 for (int j = 0; j < length; j++)
                 {
-                    if(arr[j][i] != CODE_VALID)
+                    if (arr[j][i] != CODE_VALID)
                     {
                         same = false;
                     }
                 }
-                if(same)
+                if (same)
                 {
                     for (int j = 0; j < length; j++)
                     {
@@ -110,15 +110,58 @@ namespace ConsoleApplication1
 
 
         }
-                
-        static void f(int from, int to, List<int> have, List<int> will)
+        static bool checkObeyKnown(List<int> have, List<int> knownOK, List<int> knownNO)
+        {
+            int k = 0;
+            int sum = 0;
+            StringBuilder sb = new StringBuilder();
+            while (k < have.Count)
+            {
+                while (sum < have[k])
+                {
+                    //sum都是空的
+                    if (knownOK.Contains(sum))
+                    {
+                        return false;
+                    }
+                    sum++;
+                }
+                while (sum < have[k] + preWill[k])
+                {
+                    //sum都是实的
+                    if (knownNO.Contains(sum))
+                    {
+                        return false;
+                    }
+                    sum++;
+                }
+                k++;
+            }
+            while (sum <= max)
+            {
+                if (knownOK.Contains(sum))
+                {
+                    return false;
+                }
+                sum++;
+            }
+            return true;
+        }
+        static void f(int from, int to, List<int> have, List<int> will, List<int> knownOK, List<int> knownNO)
         {
             //Console.WriteLine("from:" + from + "to:" + to + "have:" + have.Count + "will:" + will.Count);
             if (will.Count == 0)
             {
                 if (have.Count == preWill.Count)
                 {
-                    display(have);
+                    if (checkObeyKnown(have, knownOK, knownNO))
+                    {
+                        display(have);
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 return;
             }
@@ -137,7 +180,7 @@ namespace ConsoleApplication1
                 List<int> had = new List<int>(have);
                 List<int> would = new List<int>(will);
                 had.Add(i);
-                f(i + n + 1, to, had, would);
+                f(i + n + 1, to, had, would, knownOK, knownNO);
             }
         }
         static int allCount = 0;
@@ -147,19 +190,35 @@ namespace ConsoleApplication1
         {
             List<int> have = new List<int>();
             List<int> will = new List<int>();
-            if (args.Length == 0)
+            List<int> knownOK = new List<int>();
+            List<int> knownNO = new List<int>();
+            /*if (args.Length == 0)
             {
-                will.Add(2);
-                will.Add(2);
-                will.Add(3);
-                will.Add(4);
-                max = 14;
+                will.Add(1);
+                will.Add(1);
+                will.Add(1);
+                max = 9;
                 preWill = new List<int>(will);
-            }
-            else if (args.Length == 2)
+                knownOK.Add(8);
+                knownNO.Add(2);
+                knownNO.Add(3);
+                knownNO.Add(5);
+                knownNO.Add(7);
+                knownNO.Add(9);
+            }*/
+            string[] ns;
+            int length;
+            if(args.Length == 0)
             {
-                string[] ns = args[0].Split(',');
-                int length = ns.Length;
+                Console.WriteLine("Program.exe [queue to insert] [max length] [(optional) valid cube you know] [(optional)invalid cube you know]");
+                Console.WriteLine("Program.exe 1,2,3,1 10 8,9 2");
+				return;
+            }
+
+            if (args.Length >= 2)
+            {
+                ns = args[0].Split(',');
+                length = ns.Length;
                 for (int i = 0; i < length; i++)
                 {
                     will.Add(int.Parse(ns[i]));
@@ -168,9 +227,28 @@ namespace ConsoleApplication1
                 max = int.Parse(args[1]) - 1;
                 preWill = new List<int>(will);
             }
-            f(0, max, have, will);
+            if (args.Length >= 3)
+            {
+                ns = args[2].Split(',');
+                length = ns.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    knownOK.Add(int.Parse(ns[i]) - 1);
+                }
+            }
+            if (args.Length >= 4)
+            {
+                ns = args[3].Split(',');
+                length = ns.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    knownNO.Add(int.Parse(ns[i]) - 1);
+                }
+            }
+
+            f(0, max, have, will, knownOK, knownNO);
             showSame();
-            Console.ReadLine();
         }
+
     }
 }
